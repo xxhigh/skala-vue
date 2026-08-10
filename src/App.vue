@@ -1,6 +1,13 @@
 <script setup>
 import SampleOne from './components/practices/SampleOne.vue'
 import SampleTwo from './components/practices/SampleTwo.vue'
+import VueHtml from './components/practices/VueHtml.vue'
+import VueHtmlXSS from './components/practices/VueHtmlXSS.vue'
+import VueText from './components/practices/VueText.vue'
+import VueBind from './components/practices/VueBind.vue'
+import VueBindClass from './components/practices/VueBindClass.vue'
+import VueBindStyle from './components/practices/VueBindStyle.vue'
+import VueBindShort from './components/practices/VueBindShort.vue'
 </script>
 
 <template>
@@ -8,6 +15,20 @@ import SampleTwo from './components/practices/SampleTwo.vue'
     <SampleOne />
     <hr style="margin: 20px 0" />
     <SampleTwo />
+    <hr style="margin: 20px 0" />
+    <VueHtml />
+    <hr style="margin: 20px 0" />
+    <VueHtmlXSS />
+    <hr style="margin: 20px 0" />
+    <VueText />
+    <hr style="margin: 20px 0" />
+    <VueBind />
+    <hr style="margin: 20px 0" />
+    <VueBindClass />
+    <hr style="margin: 20px 0" />
+    <VueBindStyle />
+    <hr style="margin: 20px 0" />
+    <VueBindShort />
   </div>
 </template>
 
