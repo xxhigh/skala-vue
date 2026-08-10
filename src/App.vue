@@ -8,6 +8,9 @@ import VueBind from './components/practices/VueBind.vue'
 import VueBindClass from './components/practices/VueBindClass.vue'
 import VueBindStyle from './components/practices/VueBindStyle.vue'
 import VueBindShort from './components/practices/VueBindShort.vue'
+import VueIf from './components/practices/VueIf.vue'
+import VueShow from './components/practices/VueShow.vue'
+import VueFor from './components/practices/VueFor.vue'
 </script>
 
 <template>
@@ -29,6 +32,12 @@ import VueBindShort from './components/practices/VueBindShort.vue'
     <VueBindStyle />
     <hr style="margin: 20px 0" />
     <VueBindShort />
+    <hr style="margin: 20px 0" />
+    <VueIf />
+    <hr style="margin: 20px 0" />
+    <VueShow />
+    <hr style="margin: 20px 0" />
+    <VueFor />
   </div>
 </template>
 
