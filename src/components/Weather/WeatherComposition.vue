@@ -7,17 +7,16 @@ const tips = ref([
   '어지러움이 느껴진다면 즉시 시원한 곳으로 이동해주세요. 😵‍💫',
 ])
 
-const tip = ref('상단의 오늘의 팁을 클릭해보세요 !')
+const tip = computed(() => {
+  return selectedTipIndex.value === null
+    ? '💡 상단의 오늘의 팁을 클릭해보세요 !'
+    : tips.value[selectedTipIndex.value]
+})
+const selectedTipIndex = ref(null)
 
 const refreshTip = () => {
   const r = Math.random()
-  if (r >= 0.6) {
-    tip.value = tips.value[0]
-  } else if (r >= 0.3) {
-    tip.value = tips.value[1]
-  } else {
-    tip.value = tips.value[2]
-  }
+  selectedTipIndex.value = r >= 0.6 ? 0 : r >= 0.3 ? 1 : 2
 }
 
 const weatherList = ref([
@@ -50,8 +49,6 @@ watch(selectedCity, (newValue) => {
 watch(tip, (newValue) => {
   console.log(`[Watch 감지] 오늘의 팁이 갱신되었습니다. -> "${newValue}"`)
 })
-
-watch()
 
 watchEffect(() => {
   console.log(
