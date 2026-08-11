@@ -11,6 +11,17 @@ import VueBindShort from './components/practices/VueBindShort.vue'
 import VueIf from './components/practices/VueIf.vue'
 import VueShow from './components/practices/VueShow.vue'
 import VueFor from './components/practices/VueFor.vue'
+import VuePre from './components/practices/VuePre.vue'
+import VueCloak from './components/practices/VueCloak.vue'
+import VueOnce from './components/practices/VueOnce.vue'
+import VueMemo from './components/practices/VueMemo.vue'
+import EventHandler from './components/practices/EventHandler.vue'
+import EventObject from './components/practices/EventObject.vue'
+import EventModifier from './components/practices/EventModifier.vue'
+import VModelBasic from './components/practices/VModelBasic.vue'
+import VModelForm from './components/practices/VModelForm.vue'
+import VModelModifier from './components/practices/VModelModifier.vue'
+import VueStyleSample from './components/practices/VueStyleSample.vue'
 </script>
 
 <template>
@@ -38,6 +49,28 @@ import VueFor from './components/practices/VueFor.vue'
     <VueShow />
     <hr style="margin: 20px 0" />
     <VueFor />
+    <hr style="margin: 20px 0" />
+    <VuePre />
+    <hr style="margin: 20px 0" />
+    <VueCloak />
+    <hr style="margin: 20px 0" />
+    <VueOnce />
+    <hr style="margin: 20px 0" />
+    <VueMemo />
+    <hr style="margin: 20px 0" />
+    <EventHandler />
+    <hr style="margin: 20px 0" />
+    <EventObject />
+    <hr style="margin: 20px 0" />
+    <EventModifier />
+    <hr style="margin: 20px 0" />
+    <VModelBasic />
+    <hr style="margin: 20px 0" />
+    <VModelForm />
+    <hr style="margin: 20px 0" />
+    <VModelModifier />
+    <hr style="margin: 20px 0" />
+    <VueStyleSample />
   </div>
 </template>
 
