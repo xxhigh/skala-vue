@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import WeatherSummaryCard from '@/components/weather-app/WeatherSummaryCard.vue'
@@ -10,6 +10,7 @@ import { getWeatherVideo } from '@/utils/weather'
 
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
+const weatherVideo = ref(null)
 const videoFailed = ref(false)
 const reduceMotion = ref(false)
 let motionQuery
@@ -22,9 +23,36 @@ const posterSource = computed(() =>
 )
 const showVideo = computed(() => !reduceMotion.value && !videoFailed.value)
 
+async function syncVideoPlayback() {
+  await nextTick()
+  if (!weatherVideo.value || !showVideo.value) return
+
+  if (configStore.videoPaused) {
+    weatherVideo.value.pause()
+    return
+  }
+
+  try {
+    await weatherVideo.value.play()
+  } catch {
+    configStore.setVideoPaused(true)
+  }
+}
+
+function handleVideoError() {
+  videoFailed.value = true
+}
+
 function updateMotionPreference(event) {
   reduceMotion.value = event.matches || Boolean(navigator.connection?.saveData)
 }
+
+watch(showVideo, (available) => configStore.setVideoAvailable(available), { immediate: true })
+watch(
+  [() => configStore.videoPaused, videoSource, showVideo],
+  () => syncVideoPlayback(),
+  { flush: 'post' },
+)
 
 onMounted(() => {
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -45,16 +73,18 @@ onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPre
     >
       <video
         v-if="showVideo"
+        ref="weatherVideo"
         :key="videoSource"
         class="weather-video"
-        autoplay
+        :autoplay="!configStore.videoPaused"
         muted
         loop
         playsinline
         preload="metadata"
         fetchpriority="high"
         :poster="posterSource"
-        @error="videoFailed = true"
+        @canplay="syncVideoPlayback"
+        @error="handleVideoError"
       >
         <source :src="videoSource" type="video/mp4" />
       </video>

@@ -11,6 +11,7 @@ const DIRECT_GEOCODING_ENDPOINT = '/geo/1.0/direct'
 const REVERSE_GEOCODING_ENDPOINT = '/geo/1.0/reverse'
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 const RECENT_KEY = 'skala-weather-recent-cities'
+const FAVORITES_KEY = 'skala-weather-favorite-cities'
 
 const weatherApi = axios.create({
   baseURL: OPENWEATHER_BASE,
@@ -28,11 +29,34 @@ const SEOUL = {
 
 const countryNames = new Intl.DisplayNames(['ko'], { type: 'region' })
 
-function readRecentCities() {
+function readStoredCities(key) {
   try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+    const cities = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(cities) ? cities : []
   } catch {
     return []
+  }
+}
+
+function getLocationKey(location) {
+  const latitude = Number(location?.latitude)
+  const longitude = Number(location?.longitude)
+
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return `${latitude.toFixed(4)}:${longitude.toFixed(4)}`
+  }
+
+  return String(location?.id || '')
+}
+
+function toStoredLocation(location) {
+  return {
+    id: location.id || getLocationKey(location),
+    name: location.name,
+    region: location.region,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    source: 'favorite',
   }
 }
 
@@ -162,7 +186,8 @@ export const useWeatherStore = defineStore('weather', () => {
   const daily = ref([])
   const airQuality = ref(null)
   const searchResults = ref([])
-  const recentCities = ref(readRecentCities())
+  const recentCities = ref(readStoredCities(RECENT_KEY))
+  const favoriteCities = ref(readStoredCities(FAVORITES_KEY))
   const loading = ref(false)
   const searching = ref(false)
   const initialized = ref(false)
@@ -312,6 +337,40 @@ export const useWeatherStore = defineStore('weather', () => {
     return true
   }
 
+  function isSameLocation(firstLocation, secondLocation) {
+    const firstKey = getLocationKey(firstLocation)
+    return Boolean(firstKey) && firstKey === getLocationKey(secondLocation)
+  }
+
+  function isFavoriteLocation(nextLocation) {
+    return favoriteCities.value.some((city) => isSameLocation(city, nextLocation))
+  }
+
+  function toggleFavorite(nextLocation) {
+    const locationKey = getLocationKey(nextLocation)
+    if (!locationKey) return false
+
+    if (isFavoriteLocation(nextLocation)) {
+      favoriteCities.value = favoriteCities.value.filter(
+        (city) => !isSameLocation(city, nextLocation),
+      )
+    } else {
+      favoriteCities.value = [
+        toStoredLocation(nextLocation),
+        ...favoriteCities.value.filter((city) => !isSameLocation(city, nextLocation)),
+      ]
+    }
+
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteCities.value))
+    return isFavoriteLocation(nextLocation)
+  }
+
+  async function selectFavorite(city) {
+    const succeeded = await fetchWeather(city)
+    if (succeeded) locationFallback.value = false
+    return succeeded
+  }
+
   async function retry() {
     await fetchWeather(location.value || SEOUL)
   }
@@ -324,6 +383,7 @@ export const useWeatherStore = defineStore('weather', () => {
     airQuality,
     searchResults,
     recentCities,
+    favoriteCities,
     loading,
     searching,
     initialized,
@@ -333,6 +393,10 @@ export const useWeatherStore = defineStore('weather', () => {
     initializeLocation,
     searchCities,
     selectCity,
+    selectFavorite,
+    isSameLocation,
+    isFavoriteLocation,
+    toggleFavorite,
     retry,
   }
 })

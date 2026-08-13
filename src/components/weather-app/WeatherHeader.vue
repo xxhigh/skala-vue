@@ -1,38 +1,39 @@
 <script setup>
-import { nextTick, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AutoComplete from 'primevue/autocomplete'
-import Popover from 'primevue/popover'
-import ToggleSwitch from 'primevue/toggleswitch'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import UiIcon from './UiIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { useWeatherStore } from '@/stores/weatherStore'
 
 const router = useRouter()
+const route = useRoute()
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
 const isSearchOpen = ref(false)
 const searchValue = ref('')
 const searchButton = ref(null)
-const searchPopover = ref(null)
+const searchDock = ref(null)
+const searchAutocomplete = ref(null)
+const isLandingPage = computed(() => route.name === 'home')
+const videoControlLabel = computed(() => {
+  if (!configStore.videoAvailable) return '배경 동영상 재생을 사용할 수 없습니다'
+  return configStore.videoPaused ? '배경 동영상 재생' : '배경 동영상 일시정지'
+})
 
-const themeSwitchPt = {
-  input: { class: 'theme-switch-input' },
-  slider: { class: 'theme-switch-slider' },
-  handle: { class: 'theme-switch-handle' },
-}
-
-async function openSearch(event) {
-  const anchor = event?.currentTarget || searchButton.value
-  if (!anchor) return
-  searchPopover.value?.show({ currentTarget: anchor }, anchor)
+async function openSearch() {
+  isSearchOpen.value = true
   await nextTick()
+  searchAutocomplete.value?.$el?.querySelector('input')?.focus()
 }
 
-function closeSearch() {
-  searchPopover.value?.hide()
+async function closeSearch({ restoreFocus = true } = {}) {
+  isSearchOpen.value = false
   searchValue.value = ''
   weatherStore.searchResults = []
+  if (!restoreFocus) return
+  await nextTick()
+  searchButton.value?.focus()
 }
 
 function searchCities(event) {
@@ -42,8 +43,14 @@ function searchCities(event) {
 async function chooseCity(city) {
   const succeeded = await weatherStore.selectCity(city)
   if (!succeeded) return
-  closeSearch()
+  await closeSearch({ restoreFocus: false })
   await router.push('/')
+}
+
+function handlePointerDown(event) {
+  if (isSearchOpen.value && !searchDock.value?.contains(event.target)) {
+    closeSearch({ restoreFocus: false })
+  }
 }
 
 function handleKeydown(event) {
@@ -54,63 +61,51 @@ function handleKeydown(event) {
   }
 }
 
-window.addEventListener('keydown', handleKeydown)
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  document.addEventListener('pointerdown', handlePointerDown)
+})
+
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('pointerdown', handlePointerDown)
 })
 </script>
 
 <template>
   <header class="app-header">
-    <nav class="nav-pill" aria-label="주요 메뉴">
-      <RouterLink to="/" class="wordmark" aria-label="NUBI 날씨 홈">NUBI</RouterLink>
+    <Transition name="header-fade">
+      <RouterLink v-if="!isSearchOpen" to="/" class="wordmark" aria-label="NUBI 날씨 홈">
+        NUBI
+      </RouterLink>
+    </Transition>
 
-      <div class="search-control">
-        <button
-          ref="searchButton"
-          class="icon-button"
-          type="button"
-          :aria-expanded="isSearchOpen"
-          aria-haspopup="dialog"
-          aria-label="도시 검색"
-          @click="openSearch"
-        >
-          <UiIcon name="search" />
-        </button>
-      </div>
-
-      <ToggleSwitch
-        :model-value="configStore.isDark"
-        class="theme-switch"
-        :pt="themeSwitchPt"
-        :aria-label="configStore.isDark ? '라이트 테마로 변경' : '다크 테마로 변경'"
-        @update:model-value="configStore.toggleTheme"
+    <div ref="searchDock" class="search-dock" :class="{ 'is-open': isSearchOpen }">
+      <button
+        ref="searchButton"
+        class="search-trigger"
+        type="button"
+        :aria-expanded="isSearchOpen"
+        :aria-hidden="isSearchOpen"
+        aria-controls="city-search-surface"
+        aria-label="도시 검색"
+        :tabindex="isSearchOpen ? -1 : 0"
+        @click="openSearch"
       >
-        <template #handle="{ checked }">
-          <UiIcon :name="checked ? 'moon' : 'sun'" :size="16" />
-        </template>
-      </ToggleSwitch>
-    </nav>
+        <UiIcon name="search" />
+      </button>
 
-    <Popover
-      ref="searchPopover"
-      class="search-popover"
-      :dismissable="true"
-      :close-on-escape="true"
-      @show="isSearchOpen = true"
-      @hide="isSearchOpen = false"
-    >
-      <div class="search-surface">
+      <div v-if="isSearchOpen" id="city-search-surface" class="search-surface" role="search">
         <div class="search-field-wrap">
           <UiIcon name="search" :size="18" />
           <label class="sr-only" for="city-search">도시 검색</label>
           <AutoComplete
+            ref="searchAutocomplete"
             v-model="searchValue"
             input-id="city-search"
             class="city-autocomplete"
             input-class="search-input"
             panel-class="search-panel"
-            :input-props="{ autofocus: true }"
             :suggestions="weatherStore.searchResults"
             option-label="name"
             data-key="id"
@@ -144,7 +139,10 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <section v-if="typeof searchValue === 'string' && searchValue.length < 2" class="recent-panel">
+        <section
+          v-if="typeof searchValue === 'string' && searchValue.length < 2"
+          class="recent-panel"
+        >
           <p class="search-panel-title">최근 검색</p>
           <div v-if="weatherStore.recentCities.length" class="recent-list">
             <button
@@ -160,6 +158,39 @@ onBeforeUnmount(() => {
           <p v-else class="search-empty">최근 검색한 도시가 없습니다.</p>
         </section>
       </div>
-    </Popover>
+    </div>
+
+    <Transition name="header-fade">
+      <div
+        v-if="!isSearchOpen"
+        class="header-actions"
+        aria-label="화면 설정"
+      >
+        <button
+          v-if="isLandingPage"
+          class="media-toggle"
+          type="button"
+          :disabled="!configStore.videoAvailable"
+          :aria-pressed="configStore.videoPaused"
+          :aria-label="videoControlLabel"
+          :title="videoControlLabel"
+          @click="configStore.toggleVideoPlayback"
+        >
+          <UiIcon :name="configStore.videoPaused ? 'play' : 'pause'" :size="18" />
+        </button>
+
+        <span v-if="isLandingPage" class="header-actions-divider" aria-hidden="true"></span>
+
+        <button
+          class="theme-button"
+          type="button"
+          :aria-pressed="configStore.isDark"
+          :aria-label="configStore.isDark ? '라이트 테마로 변경' : '다크 테마로 변경'"
+          @click="configStore.toggleTheme"
+        >
+          <UiIcon :name="configStore.isDark ? 'moon' : 'sun'" :size="18" />
+        </button>
+      </div>
+    </Transition>
   </header>
 </template>

@@ -17,7 +17,7 @@
   --color-focus: oklch(50% 0.2 245);
   --color-danger: oklch(55% 0.19 25);
   --color-success: oklch(48% 0.14 155);
-  --color-warning: oklch(65% 0.14 75);
+  --color-warning: oklch(80% 0.16 78);
   --color-on-media: oklch(97% 0.012 230);
   --color-on-media-muted: oklch(87% 0.02 230);
   --color-glass: oklch(98% 0.018 230 / 0.16);

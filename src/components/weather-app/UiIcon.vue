@@ -8,6 +8,10 @@ defineProps({
     type: Number,
     default: 20,
   },
+  filled: {
+    type: Boolean,
+    default: false,
+  },
 })
 </script>
 
@@ -16,7 +20,7 @@ defineProps({
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
-    fill="none"
+    :fill="filled ? 'currentColor' : 'none'"
     stroke="currentColor"
     stroke-width="2"
     stroke-linecap="round"
@@ -66,6 +70,15 @@ defineProps({
     </template>
     <template v-else-if="name === 'close'">
       <path d="m6 6 12 12M18 6 6 18" />
+    </template>
+    <template v-else-if="name === 'star'">
+      <path d="m12 2.8 2.83 5.73 6.32.92-4.57 4.45 1.08 6.29L12 17.22l-5.66 2.97 1.08-6.29-4.57-4.45 6.32-.92L12 2.8Z" />
+    </template>
+    <template v-else-if="name === 'play'">
+      <path d="m8 5 11 7-11 7V5Z" />
+    </template>
+    <template v-else-if="name === 'pause'">
+      <path d="M9 5v14M15 5v14" />
     </template>
   </svg>
 </template>
