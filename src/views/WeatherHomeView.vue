@@ -6,14 +6,16 @@ import WeatherSummaryCard from '@/components/weather-app/WeatherSummaryCard.vue'
 import UiIcon from '@/components/weather-app/UiIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { useWeatherStore } from '@/stores/weatherStore'
-import { getWeatherVideo } from '@/utils/weather'
+import { formatLocationTime, getWeatherVideo } from '@/utils/weather'
 
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
 const weatherVideo = ref(null)
 const videoFailed = ref(false)
 const reduceMotion = ref(false)
+const currentTimestamp = ref(Date.now())
 let motionQuery
+let clockTimer
 
 const videoSource = computed(() =>
   getWeatherVideo(weatherStore.current?.weatherCode ?? 0, weatherStore.current?.isDay ?? true),
@@ -22,6 +24,9 @@ const posterSource = computed(() =>
   configStore.isDark ? '/resources/bg_dark.jpg' : '/resources/bg_white.jpg',
 )
 const showVideo = computed(() => !reduceMotion.value && !videoFailed.value)
+const locationTime = computed(() =>
+  formatLocationTime(currentTimestamp.value, weatherStore.location.timezoneOffset),
+)
 
 async function syncVideoPlayback() {
   await nextTick()
@@ -47,6 +52,14 @@ function updateMotionPreference(event) {
   reduceMotion.value = event.matches || Boolean(navigator.connection?.saveData)
 }
 
+function scheduleClockUpdate() {
+  const millisecondsUntilNextMinute = 60000 - (Date.now() % 60000)
+  clockTimer = window.setTimeout(() => {
+    currentTimestamp.value = Date.now()
+    scheduleClockUpdate()
+  }, millisecondsUntilNextMinute)
+}
+
 watch(showVideo, (available) => configStore.setVideoAvailable(available), { immediate: true })
 watch(
   [() => configStore.videoPaused, videoSource, showVideo],
@@ -58,10 +71,14 @@ onMounted(() => {
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionPreference(motionQuery)
   motionQuery.addEventListener('change', updateMotionPreference)
+  scheduleClockUpdate()
   weatherStore.initializeLocation()
 })
 
-onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPreference))
+onBeforeUnmount(() => {
+  motionQuery?.removeEventListener('change', updateMotionPreference)
+  window.clearTimeout(clockTimer)
+})
 </script>
 
 <template>
@@ -90,6 +107,15 @@ onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPre
       </video>
     </div>
     <div class="weather-scrim" aria-hidden="true"></div>
+
+    <time
+      v-if="weatherStore.current"
+      class="landing-clock"
+      :datetime="locationTime"
+      :aria-label="`${weatherStore.location.name} 현재 시각 ${locationTime}`"
+    >
+      {{ locationTime }}
+    </time>
 
     <div class="landing-content">
       <section

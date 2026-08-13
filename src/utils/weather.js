@@ -63,3 +63,15 @@ export function formatClock(dateString) {
     hour12: false,
   }).format(new Date(dateString))
 }
+
+export function formatLocationTime(timestamp, timezoneOffset = 32400) {
+  const offset = Number(timezoneOffset)
+  const safeOffset = Number.isFinite(offset) ? offset : 32400
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'UTC',
+  }).format(new Date(timestamp + safeOffset * 1000))
+}
