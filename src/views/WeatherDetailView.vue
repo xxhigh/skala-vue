@@ -1,5 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import Message from 'primevue/message'
+import Skeleton from 'primevue/skeleton'
 import { useRouter } from 'vue-router'
 import HourlyForecast from '@/components/weather-app/HourlyForecast.vue'
 import WeeklyForecast from '@/components/weather-app/WeeklyForecast.vue'
@@ -40,20 +42,27 @@ onMounted(() => {
         class="detail-loading"
         aria-live="polite"
       >
-        상세 예보를 불러오는 중…
+        <span class="sr-only">상세 예보를 불러오는 중입니다.</span>
+        <Skeleton class="detail-skeleton-line" />
+        <Skeleton class="detail-skeleton-card" />
       </section>
 
-      <section
+      <Message
         v-else-if="weatherStore.error && !weatherStore.current"
         class="weather-error"
-        role="alert"
+        severity="error"
+        :closable="false"
       >
-        <p>{{ weatherStore.error }}</p>
-        <button type="button" class="retry-button" @click="weatherStore.retry">
-          <UiIcon name="refresh" :size="18" />
-          다시 불러오기
-        </button>
-      </section>
+        <template #container>
+          <div class="weather-error-content">
+            <p>{{ weatherStore.error }}</p>
+            <button type="button" class="retry-button" @click="weatherStore.retry">
+              <UiIcon name="refresh" :size="18" />
+              다시 불러오기
+            </button>
+          </div>
+        </template>
+      </Message>
 
       <template v-else-if="weatherStore.current">
         <header class="detail-hero">

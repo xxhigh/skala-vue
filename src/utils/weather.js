@@ -14,9 +14,8 @@ export function getWeatherType(code) {
   if (code >= 500 && code < 600) return 'rain'
   if (code >= 600 && code < 700) return 'snow'
   if (code >= 700 && code < 800) return 'fog'
-  if (code === 800) return 'clear'
   if (code > 800 && code < 900) return 'cloudy'
-  return 'clear'
+  return 'clear' // code: 800
 }
 
 export function getWeatherMeta(code) {
@@ -30,7 +29,7 @@ export function getWeatherVideo(code, isDay = true) {
   // TODO: 전용 리소스가 없는 새로운 날씨 유형은 sunny 영상으로 대체한다.
   if (!resource) return '/resources/sunny_0.mp4'
 
-  const variant = resource === 'storm' ? 0 : isDay ? 0 : 1
+  const variant = isDay ? 0 : 1
   return `/resources/${resource}_${variant}.mp4`
 }
 

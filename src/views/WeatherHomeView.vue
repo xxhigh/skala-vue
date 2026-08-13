@@ -1,5 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import Message from 'primevue/message'
+import Skeleton from 'primevue/skeleton'
 import WeatherSummaryCard from '@/components/weather-app/WeatherSummaryCard.vue'
 import UiIcon from '@/components/weather-app/UiIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
@@ -66,22 +68,27 @@ onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPre
         aria-live="polite"
       >
         <span class="sr-only">현재 위치의 날씨를 불러오는 중입니다.</span>
-        <div class="skeleton-line skeleton-location"></div>
-        <div class="skeleton-line skeleton-temp"></div>
-        <div class="skeleton-card"></div>
+        <Skeleton class="skeleton-line skeleton-location" />
+        <Skeleton class="skeleton-line skeleton-temp" />
+        <Skeleton class="skeleton-card" />
       </section>
 
-      <section
+      <Message
         v-else-if="weatherStore.error && !weatherStore.current"
         class="weather-error"
-        role="alert"
+        severity="error"
+        :closable="false"
       >
-        <p>{{ weatherStore.error }}</p>
-        <button type="button" class="retry-button" @click="weatherStore.retry">
-          <UiIcon name="refresh" :size="18" />
-          다시 불러오기
-        </button>
-      </section>
+        <template #container>
+          <div class="weather-error-content">
+            <p>{{ weatherStore.error }}</p>
+            <button type="button" class="retry-button" @click="weatherStore.retry">
+              <UiIcon name="refresh" :size="18" />
+              다시 불러오기
+            </button>
+          </div>
+        </template>
+      </Message>
 
       <template v-else>
         <header class="location-copy">
