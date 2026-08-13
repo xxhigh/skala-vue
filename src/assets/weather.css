@@ -1081,6 +1081,8 @@ input:focus-visible {
   display: none;
   color: var(--color-muted);
   font-size: var(--text-sm);
+  text-align: end;
+  white-space: nowrap;
 }
 
 .weekly-temperature {
@@ -1248,7 +1250,7 @@ button[data-state='success'] {
   }
 
   .weekly-row {
-    grid-template-columns: minmax(3rem, 0.75fr) minmax(0, 1.5fr) auto minmax(5rem, auto);
+    grid-template-columns: minmax(4.5rem, 0.7fr) minmax(0, 1.3fr) 3.25rem 5rem;
   }
 
   .weekly-rain {
@@ -1305,7 +1307,6 @@ button[data-state='success'] {
 @media (pointer: coarse) {
   .search-trigger,
   .media-toggle,
-  .theme-button,
   .search-close,
   .recent-chip,
   .unit-button,
