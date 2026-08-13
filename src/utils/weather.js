@@ -14,9 +14,8 @@ export function getWeatherType(code) {
   if (code >= 500 && code < 600) return 'rain'
   if (code >= 600 && code < 700) return 'snow'
   if (code >= 700 && code < 800) return 'fog'
-  if (code === 800) return 'clear'
   if (code > 800 && code < 900) return 'cloudy'
-  return 'clear'
+  return 'clear' // code: 800
 }
 
 export function getWeatherMeta(code) {
@@ -30,7 +29,7 @@ export function getWeatherVideo(code, isDay = true) {
   // TODO: 전용 리소스가 없는 새로운 날씨 유형은 sunny 영상으로 대체한다.
   if (!resource) return '/resources/sunny_0.mp4'
 
-  const variant = resource === 'storm' ? 0 : isDay ? 0 : 1
+  const variant = isDay ? 0 : 1
   return `/resources/${resource}_${variant}.mp4`
 }
 
@@ -63,4 +62,16 @@ export function formatClock(dateString) {
     minute: '2-digit',
     hour12: false,
   }).format(new Date(dateString))
+}
+
+export function formatLocationTime(timestamp, timezoneOffset = 32400) {
+  const offset = Number(timezoneOffset)
+  const safeOffset = Number.isFinite(offset) ? offset : 32400
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'UTC',
+  }).format(new Date(timestamp + safeOffset * 1000))
 }

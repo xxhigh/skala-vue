@@ -1,16 +1,22 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import Message from 'primevue/message'
+import Skeleton from 'primevue/skeleton'
+import PointerBlur from '@/components/weather-app/PointerBlur.vue'
 import WeatherSummaryCard from '@/components/weather-app/WeatherSummaryCard.vue'
 import UiIcon from '@/components/weather-app/UiIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { useWeatherStore } from '@/stores/weatherStore'
-import { getWeatherVideo } from '@/utils/weather'
+import { formatLocationTime, getWeatherVideo } from '@/utils/weather'
 
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
+const weatherVideo = ref(null)
 const videoFailed = ref(false)
 const reduceMotion = ref(false)
+const currentTimestamp = ref(Date.now())
 let motionQuery
+let clockTimer
 
 const videoSource = computed(() =>
   getWeatherVideo(weatherStore.current?.weatherCode ?? 0, weatherStore.current?.isDay ?? true),
@@ -19,19 +25,61 @@ const posterSource = computed(() =>
   configStore.isDark ? '/resources/bg_dark.jpg' : '/resources/bg_white.jpg',
 )
 const showVideo = computed(() => !reduceMotion.value && !videoFailed.value)
+const locationTime = computed(() =>
+  formatLocationTime(currentTimestamp.value, weatherStore.location.timezoneOffset),
+)
+
+async function syncVideoPlayback() {
+  await nextTick()
+  if (!weatherVideo.value || !showVideo.value) return
+
+  if (configStore.videoPaused) {
+    weatherVideo.value.pause()
+    return
+  }
+
+  try {
+    await weatherVideo.value.play()
+  } catch {
+    configStore.setVideoPaused(true)
+  }
+}
+
+function handleVideoError() {
+  videoFailed.value = true
+}
 
 function updateMotionPreference(event) {
   reduceMotion.value = event.matches || Boolean(navigator.connection?.saveData)
 }
 
+function scheduleClockUpdate() {
+  const millisecondsUntilNextMinute = 60000 - (Date.now() % 60000)
+  clockTimer = window.setTimeout(() => {
+    currentTimestamp.value = Date.now()
+    scheduleClockUpdate()
+  }, millisecondsUntilNextMinute)
+}
+
+watch(showVideo, (available) => configStore.setVideoAvailable(available), { immediate: true })
+watch(
+  [() => configStore.videoPaused, videoSource, showVideo],
+  () => syncVideoPlayback(),
+  { flush: 'post' },
+)
+
 onMounted(() => {
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionPreference(motionQuery)
   motionQuery.addEventListener('change', updateMotionPreference)
+  scheduleClockUpdate()
   weatherStore.initializeLocation()
 })
 
-onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPreference))
+onBeforeUnmount(() => {
+  motionQuery?.removeEventListener('change', updateMotionPreference)
+  window.clearTimeout(clockTimer)
+})
 </script>
 
 <template>
@@ -43,21 +91,33 @@ onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPre
     >
       <video
         v-if="showVideo"
+        ref="weatherVideo"
         :key="videoSource"
         class="weather-video"
-        autoplay
+        :autoplay="!configStore.videoPaused"
         muted
         loop
         playsinline
         preload="metadata"
         fetchpriority="high"
         :poster="posterSource"
-        @error="videoFailed = true"
+        @canplay="syncVideoPlayback"
+        @error="handleVideoError"
       >
         <source :src="videoSource" type="video/mp4" />
       </video>
     </div>
     <div class="weather-scrim" aria-hidden="true"></div>
+    <PointerBlur />
+
+    <time
+      v-if="weatherStore.current"
+      class="landing-clock"
+      :datetime="locationTime"
+      :aria-label="`${weatherStore.location.name} 현재 시각 ${locationTime}`"
+    >
+      {{ locationTime }}
+    </time>
 
     <div class="landing-content">
       <section
@@ -66,22 +126,27 @@ onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPre
         aria-live="polite"
       >
         <span class="sr-only">현재 위치의 날씨를 불러오는 중입니다.</span>
-        <div class="skeleton-line skeleton-location"></div>
-        <div class="skeleton-line skeleton-temp"></div>
-        <div class="skeleton-card"></div>
+        <Skeleton class="skeleton-line skeleton-location" />
+        <Skeleton class="skeleton-line skeleton-temp" />
+        <Skeleton class="skeleton-card" />
       </section>
 
-      <section
+      <Message
         v-else-if="weatherStore.error && !weatherStore.current"
         class="weather-error"
-        role="alert"
+        severity="error"
+        :closable="false"
       >
-        <p>{{ weatherStore.error }}</p>
-        <button type="button" class="retry-button" @click="weatherStore.retry">
-          <UiIcon name="refresh" :size="18" />
-          다시 불러오기
-        </button>
-      </section>
+        <template #container>
+          <div class="weather-error-content">
+            <p>{{ weatherStore.error }}</p>
+            <button type="button" class="retry-button" @click="weatherStore.retry">
+              <UiIcon name="refresh" :size="18" />
+              다시 불러오기
+            </button>
+          </div>
+        </template>
+      </Message>
 
       <template v-else>
         <header class="location-copy">

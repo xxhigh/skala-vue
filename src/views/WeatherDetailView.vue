@@ -1,7 +1,11 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import Message from 'primevue/message'
+import Skeleton from 'primevue/skeleton'
 import { useRouter } from 'vue-router'
+import FavoriteLocations from '@/components/weather-app/FavoriteLocations.vue'
 import HourlyForecast from '@/components/weather-app/HourlyForecast.vue'
+import PointerBlur from '@/components/weather-app/PointerBlur.vue'
 import WeeklyForecast from '@/components/weather-app/WeeklyForecast.vue'
 import WeatherDetailsGrid from '@/components/weather-app/WeatherDetailsGrid.vue'
 import WeatherGlyph from '@/components/weather-app/WeatherGlyph.vue'
@@ -18,6 +22,17 @@ const temperature = computed(() =>
   formatTemperature(weatherStore.current?.temperature, configStore.unit),
 )
 const unit = computed(() => (configStore.unit === 'celsius' ? 'C' : 'F'))
+const isCurrentFavorite = computed(() => weatherStore.isFavoriteLocation(weatherStore.location))
+
+function toggleCurrentFavorite() {
+  weatherStore.toggleFavorite(weatherStore.location)
+}
+
+async function selectFavorite(city) {
+  const succeeded = await weatherStore.selectFavorite(city)
+  if (!succeeded) return
+  await router.replace({ name: 'detail', params: { cityId: city.id } })
+}
 
 onMounted(() => {
   if (!weatherStore.current && !weatherStore.loading) weatherStore.initializeLocation()
@@ -28,6 +43,7 @@ onMounted(() => {
   <main class="weather-detail-page">
     <div class="detail-backdrop" aria-hidden="true"></div>
     <div class="detail-scrim" aria-hidden="true"></div>
+    <PointerBlur />
 
     <div class="detail-shell">
       <button type="button" class="back-link" @click="router.push('/')">
@@ -40,20 +56,27 @@ onMounted(() => {
         class="detail-loading"
         aria-live="polite"
       >
-        상세 예보를 불러오는 중…
+        <span class="sr-only">상세 예보를 불러오는 중입니다.</span>
+        <Skeleton class="detail-skeleton-line" />
+        <Skeleton class="detail-skeleton-card" />
       </section>
 
-      <section
+      <Message
         v-else-if="weatherStore.error && !weatherStore.current"
         class="weather-error"
-        role="alert"
+        severity="error"
+        :closable="false"
       >
-        <p>{{ weatherStore.error }}</p>
-        <button type="button" class="retry-button" @click="weatherStore.retry">
-          <UiIcon name="refresh" :size="18" />
-          다시 불러오기
-        </button>
-      </section>
+        <template #container>
+          <div class="weather-error-content">
+            <p>{{ weatherStore.error }}</p>
+            <button type="button" class="retry-button" @click="weatherStore.retry">
+              <UiIcon name="refresh" :size="18" />
+              다시 불러오기
+            </button>
+          </div>
+        </template>
+      </Message>
 
       <template v-else-if="weatherStore.current">
         <header class="detail-hero">
@@ -62,7 +85,20 @@ onMounted(() => {
               <UiIcon name="location" :size="18" />
               {{ weatherStore.location.name }}
             </p>
-            <h1>{{ weatherStore.weatherLabel }}</h1>
+            <div class="detail-title-row">
+              <h1>{{ weatherStore.weatherLabel }}</h1>
+              <button
+                type="button"
+                class="favorite-toggle"
+                :class="{ 'is-active': isCurrentFavorite }"
+                :aria-label="isCurrentFavorite ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'"
+                :aria-pressed="isCurrentFavorite"
+                :title="isCurrentFavorite ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'"
+                @click="toggleCurrentFavorite"
+              >
+                <UiIcon name="star" :size="26" :filled="isCurrentFavorite" />
+              </button>
+            </div>
             <p>{{ weatherStore.location.region }}</p>
           </div>
           <div class="detail-temperature">
@@ -75,6 +111,11 @@ onMounted(() => {
 
         <div class="detail-grid-layout">
           <div class="detail-primary-column">
+            <FavoriteLocations
+              :items="weatherStore.favoriteCities"
+              :loading="weatherStore.loading"
+              @select="selectFavorite"
+            />
             <HourlyForecast :items="weatherStore.hourly" />
             <WeeklyForecast :items="weatherStore.daily" />
           </div>
