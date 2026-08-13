@@ -85,6 +85,28 @@ input:focus-visible {
   pointer-events: none;
 }
 
+.app-header.is-detail-page::before {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: calc(max(var(--space-md), env(safe-area-inset-top)) + var(--space-xl) + var(--space-lg));
+  content: '';
+  background: var(--color-paper);
+  border-block-end: var(--rule-hair) solid var(--color-rule);
+  box-shadow: var(--shadow-pill);
+  opacity: 0;
+  transition: opacity var(--dur-short) var(--ease-out);
+  pointer-events: none;
+}
+
+.app-header.is-detail-page.is-scrolled::before {
+  opacity: 0.12;
+}
+
+.app-header.is-detail-page.is-scrolled .wordmark {
+  color: var(--color-ink);
+}
+
 .wordmark,
 .header-actions {
   position: absolute;
@@ -316,7 +338,7 @@ input:focus-visible {
   inset-block-start: calc(100% + var(--space-xs));
   inset-inline: 0;
   color: var(--color-on-media);
-  background: var(--color-scrim);
+  background: var(--color-glass-dark);
   border: var(--rule-hair) solid var(--color-glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
@@ -484,6 +506,33 @@ input:focus-visible {
   pointer-events: none;
 }
 
+.pointer-blur {
+  --pointer-x: -100%;
+  --pointer-y: -100%;
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-effect);
+  display: none;
+  width: calc(var(--space-3xl) + var(--space-lg));
+  height: calc(var(--space-3xl) + var(--space-lg));
+  background: radial-gradient(circle at 30% 25%, var(--color-lens-highlight), transparent 42%);
+  border: var(--rule-hair) solid var(--color-glass-border);
+  border-radius: 54% 46% 58% 42% / 47% 58% 42% 53%;
+  box-shadow: var(--shadow-lens);
+  opacity: 0;
+  backdrop-filter: blur(var(--space-xs)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--space-xs)) saturate(145%);
+  transform: translate3d(var(--pointer-x), var(--pointer-y), 0) translate(-50%, -50%);
+  transition: opacity var(--dur-short) var(--ease-out);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.pointer-blur.is-visible {
+  opacity: 0.72;
+}
+
 .landing-clock {
   position: absolute;
   inset-block-start: 27%;
@@ -607,6 +656,7 @@ input:focus-visible {
   display: flex;
   min-width: 0;
   padding-block: var(--space-sm);
+  align-items: center;
   flex-direction: column;
   gap: var(--space-2xs);
 }
@@ -825,6 +875,8 @@ input:focus-visible {
 }
 
 .detail-shell {
+  position: relative;
+  z-index: var(--z-raised);
   display: grid;
   width: 100%;
   max-width: 76rem;
@@ -1182,6 +1234,10 @@ input:focus-visible {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .pointer-blur {
+    display: block;
+  }
+
   .search-trigger:hover,
   .media-toggle:hover,
   .search-close:hover,
@@ -1358,6 +1414,10 @@ button[data-state='success'] {
   }
 
   .weather-video {
+    display: none;
+  }
+
+  .pointer-blur {
     display: none;
   }
 }

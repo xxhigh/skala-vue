@@ -16,6 +16,8 @@ const searchButton = ref(null)
 const searchDock = ref(null)
 const searchAutocomplete = ref(null)
 const isLandingPage = computed(() => route.name === 'home')
+const isDetailPage = computed(() => route.name === 'detail')
+const isHeaderScrolled = ref(false)
 const videoControlLabel = computed(() => {
   if (!configStore.videoAvailable) return '배경 동영상 재생을 사용할 수 없습니다'
   return configStore.videoPaused ? '배경 동영상 재생' : '배경 동영상 일시정지'
@@ -53,6 +55,10 @@ function handlePointerDown(event) {
   }
 }
 
+function handleScroll() {
+  isHeaderScrolled.value = window.scrollY > 8
+}
+
 function handleKeydown(event) {
   if (event.key === 'Escape' && isSearchOpen.value) closeSearch()
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -62,18 +68,27 @@ function handleKeydown(event) {
 }
 
 onMounted(() => {
+  handleScroll()
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('scroll', handleScroll, { passive: true })
   document.addEventListener('pointerdown', handlePointerDown)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('scroll', handleScroll)
   document.removeEventListener('pointerdown', handlePointerDown)
 })
 </script>
 
 <template>
-  <header class="app-header">
+  <header
+    class="app-header"
+    :class="{
+      'is-detail-page': isDetailPage,
+      'is-scrolled': isDetailPage && isHeaderScrolled,
+    }"
+  >
     <Transition name="header-fade">
       <RouterLink v-if="!isSearchOpen" to="/" class="wordmark" aria-label="NUBI 날씨 홈">
         NUBI

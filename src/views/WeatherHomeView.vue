@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
+import PointerBlur from '@/components/weather-app/PointerBlur.vue'
 import WeatherSummaryCard from '@/components/weather-app/WeatherSummaryCard.vue'
 import UiIcon from '@/components/weather-app/UiIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
@@ -107,6 +108,7 @@ onBeforeUnmount(() => {
       </video>
     </div>
     <div class="weather-scrim" aria-hidden="true"></div>
+    <PointerBlur />
 
     <time
       v-if="weatherStore.current"

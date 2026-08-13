@@ -5,6 +5,7 @@ import Skeleton from 'primevue/skeleton'
 import { useRouter } from 'vue-router'
 import FavoriteLocations from '@/components/weather-app/FavoriteLocations.vue'
 import HourlyForecast from '@/components/weather-app/HourlyForecast.vue'
+import PointerBlur from '@/components/weather-app/PointerBlur.vue'
 import WeeklyForecast from '@/components/weather-app/WeeklyForecast.vue'
 import WeatherDetailsGrid from '@/components/weather-app/WeatherDetailsGrid.vue'
 import WeatherGlyph from '@/components/weather-app/WeatherGlyph.vue'
@@ -42,6 +43,7 @@ onMounted(() => {
   <main class="weather-detail-page">
     <div class="detail-backdrop" aria-hidden="true"></div>
     <div class="detail-scrim" aria-hidden="true"></div>
+    <PointerBlur />
 
     <div class="detail-shell">
       <button type="button" class="back-link" @click="router.push('/')">

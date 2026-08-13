@@ -26,6 +26,7 @@
   --color-glass-strong: oklch(98% 0.018 230 / 0.26);
   --color-glass-border: oklch(98% 0.012 230 / 0.36);
   --color-glass-dark: oklch(18% 0.02 240 / 0.34);
+  --color-lens-highlight: oklch(98% 0.018 230 / 0.22);
   --color-overlay: oklch(12% 0.025 240 / 0.52);
   --color-overlay-soft: oklch(15% 0.025 240 / 0.2);
   --color-scrim: oklch(10% 0.02 240 / 0.7);
@@ -37,6 +38,9 @@
 
   --shadow-panel: 0 1.25rem 3.5rem oklch(12% 0.03 240 / 0.2);
   --shadow-pill: 0 0.5rem 1.5rem oklch(12% 0.03 240 / 0.16);
+  --shadow-lens: inset 0.75rem 0.75rem 1.5rem oklch(98% 0.012 230 / 0.12),
+    inset -0.75rem -0.75rem 1.5rem oklch(12% 0.03 240 / 0.12),
+    0 0.75rem 2rem oklch(12% 0.03 240 / 0.12);
   --blur-panel: 1.25rem;
   --blur-pill: 0.875rem;
 
@@ -75,6 +79,7 @@
   --radius-pill: 999rem;
 
   --z-base: 1;
+  --z-effect: 5;
   --z-raised: 10;
   --z-dropdown: 100;
   --z-sticky: 200;
