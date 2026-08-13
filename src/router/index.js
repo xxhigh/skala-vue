@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import NotFoundView from '@/views/NotFoundView.vue'
 import WeatherHomeView from '@/views/WeatherHomeView.vue'
 
 const router = createRouter({
@@ -11,28 +10,14 @@ const router = createRouter({
       component: WeatherHomeView,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-    {
       path: '/weather/:cityId',
       name: 'detail',
       component: () => import('../views/WeatherDetailView.vue'),
       props: true,
     },
     {
-      path: '/clock',
-      name: 'clock',
-      component: () => import('../views/ClockView.vue'),
-    },
-    {
       path: '/:pathMatch(.*)*',
-      name: 'NotFound',
-      component: NotFoundView,
+      redirect: '/',
     },
   ],
 })
